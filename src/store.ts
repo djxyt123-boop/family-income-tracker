@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import { AppState, Settings, MonthlyData } from './types';
 
 const DEFAULT_SETTINGS: Settings = {
@@ -28,21 +30,46 @@ const DEFAULT_STATE: AppState = {
 };
 
 export function useStore() {
-  const [state, setState] = useState<AppState>(() => {
-    const saved = localStorage.getItem('familyIncomeState');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse state', e);
-      }
-    }
-    return DEFAULT_STATE;
-  });
+  const [state, setState] = useState<AppState>(DEFAULT_STATE);
+  const [isLoaded, setIsLoaded] = useState(false);
 
+  // טעינה ראשונית מהענן
   useEffect(() => {
-    localStorage.setItem('familyIncomeState', JSON.stringify(state));
-  }, [state]);
+    const loadData = async () => {
+      try {
+        const docRef = doc(db, "appState", "mainData");
+        const snapshot = await getDoc(docRef);
+
+        if (snapshot.exists()) {
+          setState(snapshot.data() as AppState);
+        } else {
+          await setDoc(docRef, DEFAULT_STATE);
+        }
+      } catch (error) {
+        console.error("Error loading data:", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // שמירה לענן רק אחרי שהטעינה הסתיימה
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const saveData = async () => {
+      try {
+        const docRef = doc(db, "appState", "mainData");
+        await setDoc(docRef, state);
+      } catch (error) {
+        console.error("Error saving data:", error);
+      }
+    };
+
+    saveData();
+  }, [state, isLoaded]);
 
   const updateSettings = (newSettings: Settings) => {
     setState(prev => ({ ...prev, settings: newSettings }));
