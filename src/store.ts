@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { AppState, Settings, MonthlyData } from './types';
+import { User } from 'firebase/auth';
 
 const DEFAULT_SETTINGS: Settings = {
   nachman: {
@@ -29,47 +30,39 @@ const DEFAULT_STATE: AppState = {
   monthlyData: {},
 };
 
-export function useStore() {
+export function useStore(user: User | null) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // טעינה ראשונית מהענן
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const docRef = doc(db, "appState", "mainData");
-        const snapshot = await getDoc(docRef);
+    if (!user) return;
 
-        if (snapshot.exists()) {
-          setState(snapshot.data() as AppState);
-        } else {
-          await setDoc(docRef, DEFAULT_STATE);
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      } finally {
-        setIsLoaded(true);
+    const loadData = async () => {
+      const docRef = doc(db, "users", user.uid);
+      const snapshot = await getDoc(docRef);
+
+      if (snapshot.exists()) {
+        setState(snapshot.data() as AppState);
+      } else {
+        await setDoc(docRef, DEFAULT_STATE);
       }
+
+      setIsLoaded(true);
     };
 
     loadData();
-  }, []);
+  }, [user]);
 
-  // שמירה לענן רק אחרי שהטעינה הסתיימה
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!user || !isLoaded) return;
 
     const saveData = async () => {
-      try {
-        const docRef = doc(db, "appState", "mainData");
-        await setDoc(docRef, state);
-      } catch (error) {
-        console.error("Error saving data:", error);
-      }
+      const docRef = doc(db, "users", user.uid);
+      await setDoc(docRef, state);
     };
 
     saveData();
-  }, [state, isLoaded]);
+  }, [state, user, isLoaded]);
 
   const updateSettings = (newSettings: Settings) => {
     setState(prev => ({ ...prev, settings: newSettings }));

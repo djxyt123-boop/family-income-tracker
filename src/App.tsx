@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from './store';
+import { useAuth } from './Auth';
 import { Navigation } from './components/Navigation';
 import { Settings } from './components/Settings';
 import { DataEntry } from './components/DataEntry';
@@ -7,26 +8,41 @@ import { Dashboard } from './components/Dashboard';
 import { ExportBackup } from './components/ExportBackup';
 
 export default function App() {
-  const { state, updateSettings, updateMonthlyData, restoreData } = useStore();
-  const [currentTab, setCurrentTab] = useState('data');
+  const { user, loading, login, logout } = useAuth();
+  const [currentTab, setCurrentTab] = useState<'data' | 'dashboard' | 'settings' | 'export'>('data');
 
-  // 🔥 חשוב – לא מציג כלום עד שהנתונים נטענים מהענן
-  if (!state) {
+  const { state, updateSettings, updateMonthlyData, restoreData } = useStore(user);
+
+  if (loading) {
+    return <div className="p-10 text-center">טוען...</div>;
+  }
+
+  if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-xl">
-        טוען נתונים...
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <h1 className="text-xl font-bold">התחבר עם Google</h1>
+        <button
+          onClick={login}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          התחברות
+        </button>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans" dir="rtl">
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 print:hidden">
-        <div className="max-w-md mx-auto p-4 flex items-center justify-center">
-          <h1 className="text-xl font-bold text-blue-900">
-            מעקב הכנסות משפחתי
-          </h1>
-        </div>
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 print:hidden flex justify-between items-center p-4">
+        <h1 className="text-xl font-bold text-blue-900">
+          מעקב הכנסות משפחתי
+        </h1>
+        <button
+          onClick={logout}
+          className="text-sm text-red-600"
+        >
+          התנתק
+        </button>
       </header>
 
       <main className="min-h-screen">
