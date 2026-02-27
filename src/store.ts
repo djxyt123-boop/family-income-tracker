@@ -34,6 +34,7 @@ export function useStore(user: User | null) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // טעינת נתונים מהשרת
   useEffect(() => {
     if (!user) return;
 
@@ -44,7 +45,7 @@ export function useStore(user: User | null) {
       if (snapshot.exists()) {
         setState(snapshot.data() as AppState);
       } else {
-        await setDoc(docRef, DEFAULT_STATE);
+        await setDoc(docRef, DEFAULT_STATE, { merge: true });
       }
 
       setIsLoaded(true);
@@ -53,12 +54,13 @@ export function useStore(user: User | null) {
     loadData();
   }, [user]);
 
+  // שמירת נתונים בכל שינוי
   useEffect(() => {
     if (!user || !isLoaded) return;
 
     const saveData = async () => {
       const docRef = doc(db, "users", user.uid);
-      await setDoc(docRef, state);
+      await setDoc(docRef, state, { merge: true });
     };
 
     saveData();
