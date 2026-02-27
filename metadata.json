@@ -1,0 +1,5 @@
+{
+  "name": "Family Income Tracker",
+  "description": "A web app to manage and track family income for a couple, including complex salary calculations, vacation/sick days management, graphical dashboard, and export capabilities.",
+  "requestFramePermissions": []
+}
