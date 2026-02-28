@@ -11,7 +11,7 @@ export default function App() {
   const { user, loading, login, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState<'data' | 'dashboard' | 'settings' | 'export'>('data');
 
-  const { state, updateSettings, updateMonthlyData, restoreData } = useStore(user);
+  const { state, updateSettings, updateMonthlyData, restoreData, isLoaded } = useStore(user);
 
   if (loading) {
     return <div className="p-10 text-center">טוען...</div>;
@@ -31,14 +31,12 @@ export default function App() {
     );
   }
 
+  if (!isLoaded) {
+    return <div className="p-10 text-center">טוען נתונים...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans" dir="rtl">
-      
-      {/* 🔥 DEBUG INFO */}
-      <div className="bg-yellow-100 p-2 text-sm text-black">
-        <div>USER EMAIL: {user.email}</div>
-        <div>USER UID: {user.uid}</div>
-      </div>
 
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 print:hidden flex justify-between items-center p-4">
         <h1 className="text-xl font-bold text-blue-900">

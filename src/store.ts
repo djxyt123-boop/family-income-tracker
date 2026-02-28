@@ -84,5 +84,5 @@ export function useStore(user: User | null) {
     setState(data);
   };
 
-  return { state, updateSettings, updateMonthlyData, restoreData };
+  return { state, updateSettings, updateMonthlyData, restoreData, isLoaded };
 }
