@@ -1,243 +1,92 @@
-import { useState } from 'react';
-import {
-  format,
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  isFriday,
-  getDay,
-  addMonths,
-  subMonths
-} from 'date-fns';
-import { AppState, MonthlyData, DayType } from '../types';
+import { format } from 'date-fns';
+import { AppState } from '../types';
 import { calculateSummary } from '../utils';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
 
-interface DataEntryProps {
+interface DashboardProps {
   state: AppState;
-  updateMonthlyData: (monthId: string, data: MonthlyData) => void;
 }
 
-const DAY_TYPES: { type: DayType; label: string; color: string }[] = [
-  { type: 'work', label: 'עבודה', color: 'bg-green-100 text-green-800 border-green-300' },
-  { type: 'vacation', label: 'חופש', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-  { type: 'sick', label: 'מחלה', color: 'bg-red-100 text-red-800 border-red-300' },
-  { type: 'none', label: 'ריק', color: 'bg-gray-50 text-gray-400 border-gray-200' },
-];
+export function Dashboard({ state }: DashboardProps) {
+  const monthId = format(new Date(), 'yyyy-MM');
 
-export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [activePerson, setActivePerson] = useState<'nachman' | 'mint'>('nachman');
+  const nachman = calculateSummary('nachman', monthId, state);
+  const mint = calculateSummary('mint', monthId, state);
 
-  const monthId = format(currentDate, 'yyyy-MM');
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const totalFamily = nachman.totalSalary + mint.totalSalary;
 
-  const currentData = state.monthlyData[monthId] ?? {
-    monthId,
-    nachman: { days: {}, calculations: 0, bonus: 0 },
-    mint: { days: {}, calculations: 0, bonus: 0 }
-  };
-
-  const personData = currentData[activePerson];
-
-  const handlePrevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const handleNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-
-  const toggleDayType = (dateStr: string) => {
-    const currentType = personData.days[dateStr] || 'none';
-    const currentIndex = DAY_TYPES.findIndex(d => d.type === currentType);
-    const nextType = DAY_TYPES[(currentIndex + 1) % DAY_TYPES.length].type;
-
-    const updatedDays = { ...personData.days };
-
-    if (nextType === 'none') {
-      delete updatedDays[dateStr];
-    } else {
-      updatedDays[dateStr] = nextType;
-    }
-
-    const newData = {
-      ...currentData,
-      [activePerson]: {
-        ...personData,
-        days: updatedDays
-      }
-    };
-
-    updateMonthlyData(monthId, newData);
-  };
-
-  const handleCalculationsChange = (val: string) => {
-    const newData = {
-      ...currentData,
-      [activePerson]: {
-        ...personData,
-        calculations: parseInt(val) || 0
-      }
-    };
-    updateMonthlyData(monthId, newData);
-  };
-
-  const handleBonusChange = (val: string) => {
-    const newData = {
-      ...currentData,
-      [activePerson]: {
-        ...personData,
-        bonus: parseInt(val) || 0
-      }
-    };
-    updateMonthlyData(monthId, newData);
-  };
-
-  const summary = calculateSummary(activePerson, monthId, state);
+  const Row = ({ label, value }: { label: string; value: any }) => (
+    <div className="grid grid-cols-2 items-center py-1">
+      <div className="text-right">{label}</div>
+      <div className="text-left dir-ltr break-all font-semibold">
+        {typeof value === 'number' ? `₪${value.toLocaleString()}` : value}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="pb-24 max-w-md mx-auto p-4">
+    <div className="pb-24 max-w-3xl mx-auto p-6 print:p-0">
 
-      {/* חודש */}
-      <div className="flex items-center justify-between mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-        <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100">
-          <ChevronRight className="w-5 h-5 text-gray-600" />
-        </button>
-        <h2 className="text-xl font-bold text-gray-800">
-          {format(currentDate, 'MM/yyyy')}
-        </h2>
-        <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-gray-100">
-          <ChevronLeft className="w-5 h-5 text-gray-600" />
-        </button>
+      <h1 className="text-2xl font-bold text-center mb-2">
+        דוח הכנסות משפחתי
+      </h1>
+
+      <div className="text-center text-gray-600 mb-6">
+        חודש: {monthId}
       </div>
 
-      {/* בחירת אדם */}
-      <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
-        <button
-          className={`flex-1 py-2 text-sm font-medium rounded-lg ${activePerson === 'nachman' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
-          onClick={() => setActivePerson('nachman')}
-        >
-          נחמן
-        </button>
-        <button
-          className={`flex-1 py-2 text-sm font-medium rounded-lg ${activePerson === 'mint' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
-          onClick={() => setActivePerson('mint')}
-        >
-          מינט
-        </button>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
 
-      {/* כותרות ימים */}
-      <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-semibold text-gray-500">
-        <div>א'</div><div>ב'</div><div>ג'</div><div>ד'</div><div>ה'</div><div>ו'</div><div>ש'</div>
-      </div>
+        {/* מינט */}
+        <div className="bg-white border rounded-xl p-4 shadow-sm">
+          <h2 className="text-lg font-bold mb-3 text-center">מינט</h2>
 
-      {/* יומן */}
-      <div className="grid grid-cols-7 gap-2 mb-6">
-        {Array.from({ length: getDay(monthStart) }).map((_, i) => (
-          <div key={`empty-${i}`} className="h-10" />
-        ))}
+          <Row label="ימי עבודה:" value={mint.workDays} />
+          <Row label="ימי שישי:" value={mint.fridayWorkDays} />
+          <Row label="ימי חופש שנוצלו:" value={mint.vacationDaysUsed} />
+          <Row label="ימי מחלה שנוצלו:" value={mint.sickDaysUsed} />
+          <Row label="יתרת חופש:" value={mint.currentVacation.toFixed(1)} />
+          <Row label="יתרת מחלה:" value={mint.currentSick.toFixed(1)} />
+          <Row label="שכר בסיס:" value={mint.baseSalaryEarned} />
 
-        {daysInMonth.map(day => {
-          const dateStr = format(day, 'yyyy-MM-dd');
-          const type = personData.days[dateStr] || 'none';
-          const typeInfo = DAY_TYPES.find(d => d.type === type)!;
-          const isFri = isFriday(day);
+          {mint.bonus > 0 && (
+            <Row label="בונוס:" value={mint.bonus} />
+          )}
 
-          return (
-            <button
-              key={dateStr}
-              onClick={() => toggleDayType(dateStr)}
-              className={`h-10 rounded-lg border flex items-center justify-center text-sm font-medium transition-colors
-              ${typeInfo.color}
-              ${isFri && type === 'none' ? 'bg-orange-50 border-orange-300' : ''}`}
-            >
-              {format(day, 'd')}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* חישובים ובונוס */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 space-y-4">
-        {activePerson === 'nachman' && (
-          <div>
-            <label className="block text-sm font-medium mb-1">מספר חישובים (20₪)</label>
-            <input
-              type="number"
-              value={personData.calculations || ''}
-              onChange={(e) => handleCalculationsChange(e.target.value)}
-              className="w-full p-2 border rounded-lg"
-            />
+          <div className="border-t mt-3 pt-2">
+            <Row label="סה״כ משכורת:" value={mint.totalSalary} />
           </div>
-        )}
-        <div>
-          <label className="block text-sm font-medium mb-1">בונוס</label>
-          <input
-            type="number"
-            value={personData.bonus || ''}
-            onChange={(e) => handleBonusChange(e.target.value)}
-            className="w-full p-2 border rounded-lg"
-          />
         </div>
+
+        {/* נחמן */}
+        <div className="bg-white border rounded-xl p-4 shadow-sm">
+          <h2 className="text-lg font-bold mb-3 text-center">נחמן</h2>
+
+          <Row label="ימי עבודה:" value={nachman.workDays} />
+          <Row label="ימי שישי:" value={nachman.fridayWorkDays} />
+          <Row label="ימי חופש שנוצלו:" value={nachman.vacationDaysUsed} />
+          <Row label="ימי מחלה שנוצלו:" value={nachman.sickDaysUsed} />
+          <Row label="יתרת חופש:" value={nachman.currentVacation.toFixed(1)} />
+          <Row label="יתרת מחלה:" value={nachman.currentSick.toFixed(1)} />
+          <Row label="שכר בסיס:" value={nachman.baseSalaryEarned} />
+          <Row label="רווח מחישובים:" value={nachman.calculationsProfit} />
+
+          {nachman.bonus > 0 && (
+            <Row label="בונוס:" value={nachman.bonus} />
+          )}
+
+          <div className="border-t mt-3 pt-2">
+            <Row label="סה״כ משכורת:" value={nachman.totalSalary} />
+          </div>
+        </div>
+
       </div>
 
-      {/* סיכום מלא */}
-      <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
-        <h3 className="text-lg font-bold text-blue-900 mb-3">סיכום חודשי</h3>
-
-        <div className="space-y-2 text-sm text-blue-800">
-          <div className="flex justify-between">
-            <span>ימי עבודה רגילים:</span>
-            <span>{summary.workDays}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>ימי שישי:</span>
-            <span>{summary.fridayWorkDays}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>חופש שנוצל:</span>
-            <span>{summary.vacationDaysUsed}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>מחלה שנוצלה:</span>
-            <span>{summary.sickDaysUsed}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>יתרת חופש:</span>
-            <span>{summary.currentVacation.toFixed(1)}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>יתרת מחלה:</span>
-            <span>{summary.currentSick.toFixed(1)}</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>שכר בסיס מחושב:</span>
-            <span>₪{summary.baseSalaryEarned.toLocaleString()}</span>
-          </div>
-
-          {activePerson === 'nachman' && (
-            <div className="flex justify-between">
-              <span>רווח מחישובים:</span>
-              <span>₪{summary.calculationsProfit.toLocaleString()}</span>
-            </div>
-          )}
-
-          {summary.bonus > 0 && (
-            <div className="flex justify-between">
-              <span>בונוס:</span>
-              <span>₪{summary.bonus.toLocaleString()}</span>
-            </div>
-          )}
-
-          <div className="flex justify-between text-lg font-bold border-t pt-2">
-            <span>סה״כ משכורת:</span>
-            <span>₪{summary.totalSalary.toLocaleString()}</span>
-          </div>
+      <div className="mt-10 text-center">
+        <h3 className="text-xl font-bold mb-2">
+          סה"כ הכנסה משפחתית
+        </h3>
+        <div className="text-3xl font-bold text-blue-600 dir-ltr break-all">
+          ₪{totalFamily.toLocaleString()}
         </div>
       </div>
 
