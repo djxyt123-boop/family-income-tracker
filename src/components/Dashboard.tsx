@@ -15,39 +15,39 @@ export function Dashboard({ state }: DashboardProps) {
   const totalFamily = nachman.totalSalary + mint.totalSalary;
 
   const Row = ({ label, value }: { label: string; value: any }) => (
-    <div className="py-1 text-sm">
-      <div>{label}</div>
-      <div className="dir-ltr break-words font-semibold">
+    <div className="py-1 text-sm flex justify-between">
+      <span>{label}</span>
+      <span className="dir-ltr font-semibold whitespace-nowrap">
         {typeof value === 'number' ? `₪${value.toLocaleString()}` : value}
-      </div>
+      </span>
     </div>
   );
 
   const SalaryBlock = ({ value }: { value: number }) => (
     <div className="border-t mt-4 pt-3 text-center">
       <div className="font-bold mb-1">סה״כ משכורת:</div>
-      <div className="text-xl font-bold text-blue-600 dir-ltr break-words">
+      <div className="text-xl font-bold text-blue-600 dir-ltr whitespace-nowrap">
         ₪{value.toLocaleString()}
       </div>
     </div>
   );
 
   return (
-    <div className="pb-24 max-w-3xl mx-auto p-6 print:p-0">
+    <div className="pb-24 max-w-4xl mx-auto p-6 print:p-4">
 
       <h1 className="text-2xl font-bold text-center mb-2">
         דוח הכנסות משפחתי
       </h1>
 
-      <div className="text-center text-gray-600 mb-6">
+      <div className="text-center text-gray-600 mb-8">
         חודש: {monthId}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
+      {/* בזמן PDF זה תמיד עמודה אחת */}
+      <div className="grid grid-cols-1 gap-8">
 
-        {/* מינט */}
-        <div className="bg-white border rounded-xl p-4 shadow-sm">
-          <h2 className="text-lg font-bold mb-3 text-center">מינט</h2>
+        <div className="bg-white border rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-bold mb-4 text-center">מינט</h2>
 
           <Row label="ימי עבודה:" value={mint.workDays} />
           <Row label="ימי שישי:" value={mint.fridayWorkDays} />
@@ -64,9 +64,8 @@ export function Dashboard({ state }: DashboardProps) {
           <SalaryBlock value={mint.totalSalary} />
         </div>
 
-        {/* נחמן */}
-        <div className="bg-white border rounded-xl p-4 shadow-sm">
-          <h2 className="text-lg font-bold mb-3 text-center">נחמן</h2>
+        <div className="bg-white border rounded-xl p-6 shadow-sm">
+          <h2 className="text-lg font-bold mb-4 text-center">נחמן</h2>
 
           <Row label="ימי עבודה:" value={nachman.workDays} />
           <Row label="ימי שישי:" value={nachman.fridayWorkDays} />
@@ -90,7 +89,7 @@ export function Dashboard({ state }: DashboardProps) {
         <div className="text-xl font-bold mb-2">
           סה"כ הכנסה משפחתית
         </div>
-        <div className="text-3xl font-bold text-blue-600 dir-ltr break-words">
+        <div className="text-3xl font-bold text-blue-600 dir-ltr whitespace-nowrap">
           ₪{totalFamily.toLocaleString()}
         </div>
       </div>
