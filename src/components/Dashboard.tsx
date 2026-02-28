@@ -9,16 +9,27 @@ interface DashboardProps {
 export function Dashboard({ state }: DashboardProps) {
   const monthId = format(new Date(), 'yyyy-MM');
 
-  const nachmanSummary = calculateSummary('nachman', monthId, state);
-  const mintSummary = calculateSummary('mint', monthId, state);
+  const nachman = calculateSummary('nachman', monthId, state);
+  const mint = calculateSummary('mint', monthId, state);
 
-  const totalFamilySalary =
-    nachmanSummary.totalSalary + mintSummary.totalSalary;
+  const totalFamily = nachman.totalSalary + mint.totalSalary;
 
-  const SalaryValue = ({ value }: { value: number }) => (
-    <span className="font-semibold break-all text-left dir-ltr">
-      ₪{value.toLocaleString()}
-    </span>
+  const Row = ({ label, value }: { label: string; value: any }) => (
+    <div className="py-1 text-sm">
+      <div>{label}</div>
+      <div className="dir-ltr break-words font-semibold">
+        {typeof value === 'number' ? `₪${value.toLocaleString()}` : value}
+      </div>
+    </div>
+  );
+
+  const SalaryBlock = ({ value }: { value: number }) => (
+    <div className="border-t mt-4 pt-3 text-center">
+      <div className="font-bold mb-1">סה״כ משכורת:</div>
+      <div className="text-xl font-bold text-blue-600 dir-ltr break-words">
+        ₪{value.toLocaleString()}
+      </div>
+    </div>
   );
 
   return (
@@ -35,127 +46,52 @@ export function Dashboard({ state }: DashboardProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2">
 
         {/* מינט */}
-        <div className="bg-white border rounded-xl p-4 shadow-sm break-words">
+        <div className="bg-white border rounded-xl p-4 shadow-sm">
           <h2 className="text-lg font-bold mb-3 text-center">מינט</h2>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>ימי עבודה:</span>
-              <span>{mintSummary.workDays}</span>
-            </div>
+          <Row label="ימי עבודה:" value={mint.workDays} />
+          <Row label="ימי שישי:" value={mint.fridayWorkDays} />
+          <Row label="ימי חופש שנוצלו:" value={mint.vacationDaysUsed} />
+          <Row label="ימי מחלה שנוצלו:" value={mint.sickDaysUsed} />
+          <Row label="יתרת חופש:" value={mint.currentVacation.toFixed(1)} />
+          <Row label="יתרת מחלה:" value={mint.currentSick.toFixed(1)} />
+          <Row label="שכר בסיס:" value={mint.baseSalaryEarned} />
 
-            <div className="flex justify-between">
-              <span>ימי שישי:</span>
-              <span>{mintSummary.fridayWorkDays}</span>
-            </div>
+          {mint.bonus > 0 && (
+            <Row label="בונוס:" value={mint.bonus} />
+          )}
 
-            <div className="flex justify-between">
-              <span>ימי חופש שנוצלו:</span>
-              <span>{mintSummary.vacationDaysUsed}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>ימי מחלה שנוצלו:</span>
-              <span>{mintSummary.sickDaysUsed}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>יתרת חופש:</span>
-              <span>{mintSummary.currentVacation.toFixed(1)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>יתרת מחלה:</span>
-              <span>{mintSummary.currentSick.toFixed(1)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>שכר בסיס:</span>
-              <SalaryValue value={mintSummary.baseSalaryEarned} />
-            </div>
-
-            {mintSummary.bonus > 0 && (
-              <div className="flex justify-between">
-                <span>בונוס:</span>
-                <SalaryValue value={mintSummary.bonus} />
-              </div>
-            )}
-
-            <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-              <span>סה״כ משכורת:</span>
-              <SalaryValue value={mintSummary.totalSalary} />
-            </div>
-          </div>
+          <SalaryBlock value={mint.totalSalary} />
         </div>
 
         {/* נחמן */}
-        <div className="bg-white border rounded-xl p-4 shadow-sm break-words">
+        <div className="bg-white border rounded-xl p-4 shadow-sm">
           <h2 className="text-lg font-bold mb-3 text-center">נחמן</h2>
 
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>ימי עבודה:</span>
-              <span>{nachmanSummary.workDays}</span>
-            </div>
+          <Row label="ימי עבודה:" value={nachman.workDays} />
+          <Row label="ימי שישי:" value={nachman.fridayWorkDays} />
+          <Row label="ימי חופש שנוצלו:" value={nachman.vacationDaysUsed} />
+          <Row label="ימי מחלה שנוצלו:" value={nachman.sickDaysUsed} />
+          <Row label="יתרת חופש:" value={nachman.currentVacation.toFixed(1)} />
+          <Row label="יתרת מחלה:" value={nachman.currentSick.toFixed(1)} />
+          <Row label="שכר בסיס:" value={nachman.baseSalaryEarned} />
+          <Row label="רווח מחישובים:" value={nachman.calculationsProfit} />
 
-            <div className="flex justify-between">
-              <span>ימי שישי:</span>
-              <span>{nachmanSummary.fridayWorkDays}</span>
-            </div>
+          {nachman.bonus > 0 && (
+            <Row label="בונוס:" value={nachman.bonus} />
+          )}
 
-            <div className="flex justify-between">
-              <span>ימי חופש שנוצלו:</span>
-              <span>{nachmanSummary.vacationDaysUsed}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>ימי מחלה שנוצלו:</span>
-              <span>{nachmanSummary.sickDaysUsed}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>יתרת חופש:</span>
-              <span>{nachmanSummary.currentVacation.toFixed(1)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>יתרת מחלה:</span>
-              <span>{nachmanSummary.currentSick.toFixed(1)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>שכר בסיס:</span>
-              <SalaryValue value={nachmanSummary.baseSalaryEarned} />
-            </div>
-
-            <div className="flex justify-between">
-              <span>רווח מחישובים:</span>
-              <SalaryValue value={nachmanSummary.calculationsProfit} />
-            </div>
-
-            {nachmanSummary.bonus > 0 && (
-              <div className="flex justify-between">
-                <span>בונוס:</span>
-                <SalaryValue value={nachmanSummary.bonus} />
-              </div>
-            )}
-
-            <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-              <span>סה״כ משכורת:</span>
-              <SalaryValue value={nachmanSummary.totalSalary} />
-            </div>
-          </div>
+          <SalaryBlock value={nachman.totalSalary} />
         </div>
 
       </div>
 
-      {/* סה"כ משפחתי */}
-      <div className="mt-10 text-center">
-        <h3 className="text-xl font-bold mb-2">
+      <div className="mt-12 text-center">
+        <div className="text-xl font-bold mb-2">
           סה"כ הכנסה משפחתית
-        </h3>
-        <div className="text-3xl font-bold text-blue-600 break-all dir-ltr">
-          ₪{totalFamilySalary.toLocaleString()}
+        </div>
+        <div className="text-3xl font-bold text-blue-600 dir-ltr break-words">
+          ₪{totalFamily.toLocaleString()}
         </div>
       </div>
 
