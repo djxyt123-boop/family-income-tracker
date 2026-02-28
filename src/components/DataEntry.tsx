@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isFriday, getDay, addMonths, subMonths, isSameMonth } from 'date-fns';
-import { AppState, MonthlyData, PersonMonthlyData, DayType } from '../types';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isFriday, getDay, addMonths, subMonths } from 'date-fns';
+import { AppState, MonthlyData, DayType } from '../types';
 import { calculateSummary } from '../utils';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 
@@ -25,7 +25,8 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
   const monthEnd = endOfMonth(currentDate);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  const currentData = state.monthlyData[monthId] || {
+  // 🔥 השינוי הקריטי כאן
+  const currentData = state.monthlyData[monthId] ?? {
     monthId,
     nachman: { days: {}, calculations: 0, bonus: 0 },
     mint: { days: {}, calculations: 0, bonus: 0 }
@@ -51,6 +52,7 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
         }
       }
     };
+
     updateMonthlyData(monthId, newData);
   };
 
@@ -80,6 +82,7 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
 
   return (
     <div className="pb-24 max-w-md mx-auto p-4">
+
       <div className="flex items-center justify-between mb-6 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
         <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-gray-100">
           <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -111,10 +114,12 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
         <div className="grid grid-cols-7 gap-2 mb-2 text-center text-xs font-semibold text-gray-500">
           <div>א'</div><div>ב'</div><div>ג'</div><div>ד'</div><div>ה'</div><div>ו'</div><div>ש'</div>
         </div>
+
         <div className="grid grid-cols-7 gap-2">
           {Array.from({ length: getDay(monthStart) }).map((_, i) => (
             <div key={`empty-${i}`} className="h-10" />
           ))}
+
           {daysInMonth.map(day => {
             const dateStr = format(day, 'yyyy-MM-dd');
             const type = personData.days[dateStr] || 'none';
@@ -132,14 +137,6 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
             );
           })}
         </div>
-        <div className="flex justify-center gap-4 mt-4 text-xs text-gray-500">
-          {DAY_TYPES.filter(d => d.type !== 'none').map(d => (
-            <div key={d.type} className="flex items-center gap-1">
-              <div className={`w-3 h-3 rounded-full border ${d.color}`} />
-              <span>{d.label}</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 space-y-4">
@@ -150,7 +147,7 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
               type="number"
               value={personData.calculations || ''}
               onChange={(e) => handleCalculationsChange(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-lg"
               dir="ltr"
             />
           </div>
@@ -161,7 +158,7 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
             type="number"
             value={personData.bonus || ''}
             onChange={(e) => handleBonusChange(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border border-gray-300 rounded-lg"
             dir="ltr"
           />
         </div>
@@ -178,46 +175,13 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
             <span>ימי שישי:</span>
             <span className="font-semibold">{summary.fridayWorkDays}</span>
           </div>
-          <div className="flex justify-between">
-            <span>ימי חופש שנוצלו:</span>
-            <span className="font-semibold">{summary.vacationDaysUsed}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>ימי מחלה שנוצלו:</span>
-            <span className="font-semibold">{summary.sickDaysUsed}</span>
-          </div>
-          <div className="h-px bg-blue-200 my-2" />
-          <div className="flex justify-between">
-            <span>יתרת חופש צבורה:</span>
-            <span className="font-semibold">{summary.currentVacation.toFixed(1)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>יתרת מחלה צבורה:</span>
-            <span className="font-semibold">{summary.currentSick.toFixed(1)}</span>
-          </div>
-          <div className="h-px bg-blue-200 my-2" />
-          <div className="flex justify-between">
-            <span>שכר בסיס:</span>
-            <span className="font-semibold">₪{summary.baseSalaryEarned.toLocaleString()}</span>
-          </div>
-          {activePerson === 'nachman' && (
-            <div className="flex justify-between">
-              <span>רווח מחישובים:</span>
-              <span className="font-semibold">₪{summary.calculationsProfit.toLocaleString()}</span>
-            </div>
-          )}
-          {summary.bonus > 0 && (
-            <div className="flex justify-between">
-              <span>בונוס:</span>
-              <span className="font-semibold">₪{summary.bonus.toLocaleString()}</span>
-            </div>
-          )}
           <div className="flex justify-between text-lg font-bold text-blue-900 mt-2 pt-2 border-t border-blue-200">
             <span>סך הכל משכורת:</span>
             <span>₪{summary.totalSalary.toLocaleString()}</span>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
