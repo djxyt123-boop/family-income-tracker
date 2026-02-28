@@ -34,7 +34,7 @@ export function useStore(user: User | null) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // טעינת נתונים מהשרת
+  // טעינה מהשרת
   useEffect(() => {
     if (!user) return;
 
@@ -45,29 +45,33 @@ export function useStore(user: User | null) {
       if (snapshot.exists()) {
         setState(snapshot.data() as AppState);
       } else {
-        await setDoc(docRef, DEFAULT_STATE, { merge: true });
+        await setDoc(docRef, DEFAULT_STATE);
+        setState(DEFAULT_STATE);
       }
 
       setIsLoaded(true);
     };
 
     loadData();
-  }, [user]);
+  }, [user?.uid]);
 
-  // שמירת נתונים בכל שינוי
+  // שמירה לשרת
   useEffect(() => {
     if (!user || !isLoaded) return;
 
     const saveData = async () => {
       const docRef = doc(db, "users", user.uid);
-      await setDoc(docRef, state, { merge: true });
+      await setDoc(docRef, state);
     };
 
     saveData();
   }, [state, user, isLoaded]);
 
   const updateSettings = (newSettings: Settings) => {
-    setState(prev => ({ ...prev, settings: newSettings }));
+    setState(prev => ({
+      ...prev,
+      settings: JSON.parse(JSON.stringify(newSettings))
+    }));
   };
 
   const updateMonthlyData = (monthId: string, data: MonthlyData) => {
@@ -75,13 +79,13 @@ export function useStore(user: User | null) {
       ...prev,
       monthlyData: {
         ...prev.monthlyData,
-        [monthId]: data,
+        [monthId]: JSON.parse(JSON.stringify(data))
       }
     }));
   };
 
   const restoreData = (data: AppState) => {
-    setState(data);
+    setState(JSON.parse(JSON.stringify(data)));
   };
 
   return { state, updateSettings, updateMonthlyData, restoreData, isLoaded };
