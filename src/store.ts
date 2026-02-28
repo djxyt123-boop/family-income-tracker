@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { AppState, Settings, MonthlyData } from './types';
 import { User } from 'firebase/auth';
@@ -34,58 +34,54 @@ export function useStore(user: User | null) {
   const [state, setState] = useState<AppState>(DEFAULT_STATE);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // טעינה מהשרת
   useEffect(() => {
     if (!user) return;
 
-    const loadData = async () => {
-      const docRef = doc(db, "users", user.uid);
-      const snapshot = await getDoc(docRef);
+    const docRef = doc(db, "users", user.uid);
 
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
         setState(snapshot.data() as AppState);
       } else {
-        await setDoc(docRef, DEFAULT_STATE);
+        setDoc(docRef, DEFAULT_STATE);
         setState(DEFAULT_STATE);
       }
-
       setIsLoaded(true);
-    };
+    });
 
-    loadData();
+    return () => unsubscribe();
   }, [user?.uid]);
 
-  // שמירה לשרת
-  useEffect(() => {
-    if (!user || !isLoaded) return;
-
-    const saveData = async () => {
-      const docRef = doc(db, "users", user.uid);
-      await setDoc(docRef, state);
-    };
-
-    saveData();
-  }, [state, user, isLoaded]);
+  const saveState = async (newState: AppState) => {
+    if (!user) return;
+    const docRef = doc(db, "users", user.uid);
+    await setDoc(docRef, newState);
+  };
 
   const updateSettings = (newSettings: Settings) => {
-    setState(prev => ({
-      ...prev,
-      settings: JSON.parse(JSON.stringify(newSettings))
-    }));
+    const newState = {
+      ...state,
+      settings: newSettings
+    };
+    setState(newState);
+    saveState(newState);
   };
 
   const updateMonthlyData = (monthId: string, data: MonthlyData) => {
-    setState(prev => ({
-      ...prev,
+    const newState = {
+      ...state,
       monthlyData: {
-        ...prev.monthlyData,
-        [monthId]: JSON.parse(JSON.stringify(data))
+        ...state.monthlyData,
+        [monthId]: data
       }
-    }));
+    };
+    setState(newState);
+    saveState(newState);
   };
 
   const restoreData = (data: AppState) => {
-    setState(JSON.parse(JSON.stringify(data)));
+    setState(data);
+    saveState(data);
   };
 
   return { state, updateSettings, updateMonthlyData, restoreData, isLoaded };
