@@ -10,12 +10,9 @@ import { ExportBackup } from './components/ExportBackup';
 export default function App() {
   const { user, loading, login, logout } = useAuth();
   const [currentTab, setCurrentTab] = useState<'data' | 'dashboard' | 'settings' | 'export'>('data');
-
   const { state, updateSettings, updateMonthlyData, restoreData, isLoaded } = useStore(user);
 
-  if (loading) {
-    return <div className="p-10 text-center">טוען...</div>;
-  }
+  if (loading) return <div className="p-10 text-center">טוען...</div>;
 
   if (!user) {
     return (
@@ -37,15 +34,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans" dir="rtl">
-
       <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 print:hidden flex justify-between items-center p-4">
         <h1 className="text-xl font-bold text-blue-900">
-          מעקב הכנסות משפחתי
+          חישוב משכורת
         </h1>
-        <button
-          onClick={logout}
-          className="text-sm text-red-600"
-        >
+        <button onClick={logout} className="text-sm text-red-600">
           התנתק
         </button>
       </header>
@@ -54,30 +47,18 @@ export default function App() {
         {currentTab === 'data' && (
           <DataEntry state={state} updateMonthlyData={updateMonthlyData} />
         )}
-
         {currentTab === 'dashboard' && (
           <Dashboard state={state} />
         )}
-
         {currentTab === 'settings' && (
-          <Settings
-            settings={state.settings}
-            updateSettings={updateSettings}
-          />
+          <Settings settings={state.settings} updateSettings={updateSettings} />
         )}
-
         {currentTab === 'export' && (
-          <ExportBackup
-            state={state}
-            restoreData={restoreData}
-          />
+          <ExportBackup state={state} restoreData={restoreData} />
         )}
       </main>
 
-      <Navigation
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-      />
+      <Navigation currentTab={currentTab} setCurrentTab={setCurrentTab} />
     </div>
   );
 }
