@@ -139,13 +139,75 @@ export function DataEntry({ state, updateMonthlyData }: DataEntryProps) {
         })}
       </div>
 
-      {/* שאר הקומפוננטה נשארת כמו אצלך (חישובים + סיכום וכו') */}
+      {/* חישובים */}
+      {activePerson === 'nachman' && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            מספר חישובים (20₪ לחישוב)
+          </label>
+          <input
+            type="number"
+            value={personData.calculations || ''}
+            onChange={(e) => handleCalculationsChange(e.target.value)}
+            className="w-full p-2 border rounded"
+            dir="ltr"
+          />
+        </div>
+      )}
 
+      <div className="mb-6">
+        <label className="block text-sm font-medium mb-1">
+          בונוס / תוספת (₪)
+        </label>
+        <input
+          type="number"
+          value={personData.bonus || ''}
+          onChange={(e) => handleBonusChange(e.target.value)}
+          className="w-full p-2 border rounded"
+          dir="ltr"
+        />
+      </div>
+
+      {/* סיכום מלא */}
       <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
         <h3 className="text-lg font-bold text-blue-900 mb-3">סיכום חודשי</h3>
-        <div className="flex justify-between text-lg font-bold border-t pt-2">
-          <span>סה״כ משכורת:</span>
-          <span>₪{summary.totalSalary.toLocaleString()}</span>
+        <div className="space-y-2 text-sm text-blue-800">
+
+          <div className="flex justify-between">
+            <span>ימי עבודה רגילים:</span>
+            <span>{summary.workDays}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>ימי שישי:</span>
+            <span>{summary.fridayWorkDays}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>ימי חופש שנוצלו:</span>
+            <span>{summary.vacationDaysUsed}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>ימי מחלה שנוצלו:</span>
+            <span>{summary.sickDaysUsed}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>יתרת חופש צבורה:</span>
+            <span>{summary.currentVacation.toFixed(1)}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>יתרת מחלה צבורה:</span>
+            <span>{summary.currentSick.toFixed(1)}</span>
+          </div>
+
+          <div className="border-t pt-2 mt-2 font-bold text-blue-900 flex justify-between">
+            <span>סך הכל משכורת:</span>
+            <span>₪{summary.totalSalary.toLocaleString()}</span>
+          </div>
+
         </div>
       </div>
 
